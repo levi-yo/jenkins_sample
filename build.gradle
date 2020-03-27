@@ -4,9 +4,14 @@ plugins {
     id 'java'
 }
 
+apply plugin: "jacoco"
+
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '13'
+targetCompatibility = '13'
+
+mainClassName = "com.kakao.bot.intent.JenkinsApplication"
 
 configurations {
     compileOnly {
@@ -28,6 +33,38 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
 }
 
+compileJava {
+    options.compilerArgs = [
+            '-Amapstruct.suppressGeneratorTimestamp=true',
+            '-Amapstruct.suppressGeneratorVersionInfoComment=true',
+            '-Xlint:preview',
+            '--enable-preview'
+    ]
+}
+
+/**
+ * java 13 enable preview
+ */
+tasks.withType(JavaCompile).each {
+    it.options.compilerArgs.add('--enable-preview')
+    it.options.compilerArgs.add('-Xlint:preview')
+}
+
 test {
     useJUnitPlatform()
+    jvmArgs(['--enable-preview'])
+}
+
+distributions {
+    distTar.enabled = false
+    distZip.enabled = false
+    bootDistTar.enabled = false
+    bootDistZip.enabled = false
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
 }

@@ -1,12 +1,7 @@
-FROM jenkins/jenkins:lts
+FROM adoptopenjdk/openjdk13:alpine-jre
+MAINTAINER levi <1223yys@naver.com>
 
-#root 계정으로 변경(for docker install)
-USER root
+COPY ./build/libs/jenkins-0.0.1-SNAPSHOT.jar /app/app.jar
 
-#DIND(docker in docker)를 위해 docker 안에서 docker를 설치
-COPY docker_install.sh /docker_install.sh
-RUN chmod +x /docker_install.sh
-RUN /docker_install.sh
-
-RUN usermod -aG docker jenkins
-USER jenkins
+EXPOSE 8080
+CMD ["java", "-jar", "/app/app.jar"]

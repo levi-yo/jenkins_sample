@@ -3,41 +3,72 @@ pipeline {
 
     environment {
         SLACK_CHANNEL = '#jenkins_notification'
+
+        REGISTRY = '1223yys/spring-web-jenkins'
+        REGISTRYCREDENTIAL = '1223yys'
     }
 
     stages {
         stage('Start') {
+            agent any
             steps {
                 slackSend (channel: SLACK_CHANNEL, color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
             }
         }
 
-        stage('Build & Test') {
+        stage('Test') {
             agent {
                 docker {
-                    image 'gradle:6.0-jdk13'
+                    image 'adoptopenjdk/openjdk13:alpine'
                     alwaysPull true
                 }
             }
             steps {
-                sh '''
-                    gradle -version
-                '''
+                sh './gradlew test --no-daemon'
+            }
+        }
+
+        stage('Build') {
+            agent {
+                docker {
+                    image 'adoptopenjdk/openjdk13:alpine'
+                    alwaysPull true
+                }
+            }
+            steps {
+                sh './gradlew --no-daemon build -x test'
             }
             post {
-                always {
-                    echo 'Test and Build post process !'
+                success {
+                    stash includes: '**/build/**', name: 'build'
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Docker image build & push') {
+            agent any
             steps {
-                echo 'jenkins sample deploy ! '
+                unstash 'build'
+                sh 'ls -al'
+                sh 'docker login -u username -p password'
+                sh 'docker build -t $REGISTRY:latest .'
+            }
+            post {
+                success {
+                    sh 'docker image ls | grep 1223yys'
+                    sh 'docker push $REGISTRY:latest'
+                }
             }
         }
 
+        stage('Clean docker image') {
+            agent any
+            steps {
+                sh 'docker rmi $REGISTRY'
+            }
+        }
     }
+
     post {
         success {
             slackSend (channel: SLACK_CHANNEL, color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")

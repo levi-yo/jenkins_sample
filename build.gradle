@@ -11,7 +11,7 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '13'
 targetCompatibility = '13'
 
-mainClassName = "com.kakao.bot.intent.JenkinsApplication"
+mainClassName = "com.example.jenkins.JenkinsApplication"
 
 configurations {
     compileOnly {
